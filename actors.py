@@ -84,6 +84,15 @@ class RPGSprite(pg.sprite.DirtySprite):
             self.rect.x += self.speed*direction_vector[0]
             self.rect.y += self.speed*direction_vector[1]
             self.dirty = 1
+        # wrapping the actors in the screen rect
+        if self.rect.right < screen_rect.left - 10:
+            self.rect.left = screen_rect.right + 10
+        elif self.rect.left > screen_rect.right + 10:
+            self.rect.right = screen_rect.left - 10
+        elif self.rect.bottom < screen_rect.top - 10:
+            self.rect.top = screen_rect.bottom + 10
+        elif self.rect.top > screen_rect.bottom + 10:
+            self.rect.bottom = screen_rect.top - 10
 
     def draw(self, surface):
         """Draw sprite to surface (not used if using group draw functions)."""
@@ -105,7 +114,6 @@ class Player(RPGSprite):
     def update(self, now, screen_rect):
         """Call base classes update method and clamp player to screen."""
         super(Player, self).update(now, screen_rect)
-        self.rect.clamp_ip(screen_rect)
 
     def add_direction(self, key):
         """Remove direction from stack if corresponding key is released."""
@@ -133,11 +141,9 @@ class AISprite(RPGSprite):
         attempts to leave the screen.
         """
         if now-self.wait_time > self.wait_delay:
+        # if screen_rect.contains(self.rect):
             self.change_direction(now)
         super(AISprite, self).update(now, screen_rect)
-        if not screen_rect.contains(self.rect):
-            self.change_direction(now)
-            self.rect.clamp_ip(screen_rect)
 
     def change_direction(self, now=0):
         """
