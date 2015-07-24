@@ -90,7 +90,7 @@ class App(object):
     def update(self):
         """Update all actors."""
         now = pg.time.get_ticks()
-        self.all_sprites.update(now, self.screen_rect)
+        self.all_sprites.update(now, self.screen_rect, self.obstacles)
         for sprite in self.all_sprites:
             layer = self.all_sprites.get_layer_of_sprite(sprite)
             if layer != sprite.rect.bottom:

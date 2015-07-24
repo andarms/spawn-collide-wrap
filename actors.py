@@ -111,9 +111,19 @@ class Player(RPGSprite):
         elif event.type == pg.KEYUP:
             self.pop_direction(event.key)
 
-    def update(self, now, screen_rect):
+    def update(self, now, screen_rect, obstacles):
         """Call base classes update method and clamp player to screen."""
         super(Player, self).update(now, screen_rect)
+        obstacles_hits = pg.sprite.spritecollide(self, obstacles, False)
+        if obstacles_hits:
+            if self.direction == "LEFT":
+                self.rect.left = obstacles_hits[0].rect.right
+            elif self.direction == "RIGHT":
+                self.rect.right = obstacles_hits[0].rect.left
+            elif self.direction == "UP":
+                self.rect.top = obstacles_hits[0].rect.bottom
+            elif self.direction == "DOWN":
+                self.rect.bottom = obstacles_hits[0].rect.top
 
     def add_direction(self, key):
         """Remove direction from stack if corresponding key is released."""
@@ -135,7 +145,7 @@ class AISprite(RPGSprite):
         self.wait_time = 0.0
         self.change_direction()
 
-    def update(self, now, screen_rect):
+    def update(self, now, screen_rect, obstacles):
         """
         Choose a new direction if wait_time has expired or the sprite
         attempts to leave the screen.
@@ -144,6 +154,17 @@ class AISprite(RPGSprite):
         # if screen_rect.contains(self.rect):
             self.change_direction(now)
         super(AISprite, self).update(now, screen_rect)
+        obstacles_hits = pg.sprite.spritecollide(self, obstacles, False)
+        if obstacles_hits:
+            if self.direction == "LEFT":
+                self.rect.left = obstacles_hits[0].rect.right
+            elif self.direction == "RIGHT":
+                self.rect.right = obstacles_hits[0].rect.left
+            elif self.direction == "UP":
+                self.rect.top = obstacles_hits[0].rect.bottom
+            elif self.direction == "DOWN":
+                self.rect.bottom = obstacles_hits[0].rect.top
+            self.change_direction(now)
 
     def change_direction(self, now=0):
         """
