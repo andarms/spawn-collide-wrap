@@ -41,7 +41,9 @@ class App(object):
                        random.randint(size, height-size*2)]
                 speed = random.randint(1,2)
                 way = random.choice(prepare.DIRECTIONS)
-                actors.AISprite(pos, speed, name, way, self.all_sprites, npcs)
+                npc = actors.AISprite(pos, speed, name, way)
+                if not pg.sprite.spritecollideany(npc, self.obstacles):
+                    npc.add(self.all_sprites, npcs)
         return npcs
 
     def make_obstacles(self):

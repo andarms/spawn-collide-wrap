@@ -25,6 +25,9 @@ class RPGSprite(pg.sprite.DirtySprite):
         self.walkframe_dict = self.make_frame_dict(self.get_frames(name))
         self.adjust_images()
         self.rect = self.image.get_rect(center=pos)
+        # collition rect
+        self.col_rect = pg.Rect(pos[0], pos[1]+12, self.rect.w, self.rect.h-12)
+        self.collide = False
         self.dirty = 1
 
     def get_frames(self, character):
@@ -76,15 +79,36 @@ class RPGSprite(pg.sprite.DirtySprite):
         if self.direction_stack:
             self.direction = self.direction_stack[-1]
 
-    def update(self, now, screen_rect):
+    def update(self, now, screen_rect, obstacles):
         """Update image and position of sprite."""
         self.adjust_images(now)
         if self.direction_stack:
             direction_vector = prepare.DIRECT_DICT[self.direction]
             self.rect.x += self.speed*direction_vector[0]
             self.rect.y += self.speed*direction_vector[1]
+            self.col_rect.bottomleft =  self.rect.bottomleft
             self.dirty = 1
-        # wrapping the actors in the screen rect
+        self.check_collitions(obstacles)
+        self.wrap_in_screen(screen_rect)
+
+    def check_collitions(self, obstacles):
+        for obstacle in obstacles:
+            if self.col_rect.colliderect(obstacle.rect):
+                if self.direction == "LEFT":
+                    self.col_rect.left = obstacle.rect.right
+                elif self.direction == "RIGHT":
+                    self.col_rect.right = obstacle.rect.left
+                elif self.direction == "UP":
+                    self.col_rect.top = obstacle.rect.bottom                    
+                elif self.direction == "DOWN":
+                    self.col_rect.bottom = obstacle.rect.top
+                self.collide = True
+                self.rect.bottomleft = self.col_rect.bottomleft
+            else:
+                self.collide = False
+
+
+    def wrap_in_screen(self, screen_rect):
         if self.rect.right < screen_rect.left - 10:
             self.rect.left = screen_rect.right + 10
         elif self.rect.left > screen_rect.right + 10:
@@ -113,17 +137,7 @@ class Player(RPGSprite):
 
     def update(self, now, screen_rect, obstacles):
         """Call base classes update method and clamp player to screen."""
-        super(Player, self).update(now, screen_rect)
-        obstacles_hits = pg.sprite.spritecollide(self, obstacles, False)
-        if obstacles_hits:
-            if self.direction == "LEFT":
-                self.rect.left = obstacles_hits[0].rect.right
-            elif self.direction == "RIGHT":
-                self.rect.right = obstacles_hits[0].rect.left
-            elif self.direction == "UP":
-                self.rect.top = obstacles_hits[0].rect.bottom
-            elif self.direction == "DOWN":
-                self.rect.bottom = obstacles_hits[0].rect.top
+        super(Player, self).update(now, screen_rect, obstacles)
 
     def add_direction(self, key):
         """Remove direction from stack if corresponding key is released."""
@@ -153,17 +167,9 @@ class AISprite(RPGSprite):
         if now-self.wait_time > self.wait_delay:
         # if screen_rect.contains(self.rect):
             self.change_direction(now)
-        super(AISprite, self).update(now, screen_rect)
+        super(AISprite, self).update(now, screen_rect, obstacles)
         obstacles_hits = pg.sprite.spritecollide(self, obstacles, False)
-        if obstacles_hits:
-            if self.direction == "LEFT":
-                self.rect.left = obstacles_hits[0].rect.right
-            elif self.direction == "RIGHT":
-                self.rect.right = obstacles_hits[0].rect.left
-            elif self.direction == "UP":
-                self.rect.top = obstacles_hits[0].rect.bottom
-            elif self.direction == "DOWN":
-                self.rect.bottom = obstacles_hits[0].rect.top
+        if self.collide:
             self.change_direction(now)
 
     def change_direction(self, now=0):
