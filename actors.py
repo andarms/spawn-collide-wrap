@@ -26,7 +26,9 @@ class RPGSprite(pg.sprite.DirtySprite):
         self.adjust_images()
         self.rect = self.image.get_rect(center=pos)
         # collition rect
-        self.col_rect = pg.Rect(pos[0], pos[1]+12, self.rect.w, self.rect.h-12)
+        head_overlap = 12
+        self.col_rect = pg.Rect(0, 0, self.rect.w, self.rect.h - head_overlap)
+        self.col_rect.bottomleft = self.rect.bottomleft
         self.collide = False
         self.dirty = 1
 
@@ -109,14 +111,15 @@ class RPGSprite(pg.sprite.DirtySprite):
 
 
     def wrap_in_screen(self, screen_rect):
-        if self.rect.right < screen_rect.left - 10:
-            self.rect.left = screen_rect.right + 10
-        elif self.rect.left > screen_rect.right + 10:
-            self.rect.right = screen_rect.left - 10
-        elif self.rect.bottom < screen_rect.top - 10:
-            self.rect.top = screen_rect.bottom + 10
-        elif self.rect.top > screen_rect.bottom + 10:
-            self.rect.bottom = screen_rect.top - 10
+        soft_move_area = 5
+        if self.rect.right < screen_rect.left - soft_move_area:
+            self.rect.left = screen_rect.right + soft_move_area
+        elif self.rect.left > screen_rect.right + soft_move_area:
+            self.rect.right = screen_rect.left - soft_move_area
+        elif self.rect.bottom < screen_rect.top - soft_move_area:
+            self.rect.top = screen_rect.bottom + soft_move_area
+        elif self.rect.top > screen_rect.bottom + soft_move_area:
+            self.rect.bottom = screen_rect.top - soft_move_area
 
     def draw(self, surface):
         """Draw sprite to surface (not used if using group draw functions)."""
